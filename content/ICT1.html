@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP/IP 運作原理互動示範</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { color: #333; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; max-width: 800px; width: 100%; }
+        .controls { margin-top: 15px; text-align: center; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 5px; transition: background 0.3s; margin: 0 5px; }
+        button:hover { background-color: #0056b3; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
+        .status-log { margin-top: 10px; padding: 10px; background: #222; color: #0f0; font-family: monospace; height: 100px; overflow-y: auto; border-radius: 5px; font-size: 14px; }
+        svg { width: 100%; height: auto; border: 1px solid #eee; background: #fafafa; }
+        
+        /* SVG Styles */
+        .layer-box { fill: #e9ecef; stroke: #adb5bd; stroke-width: 2; }
+        .layer-text { font-size: 14px; fill: #495057; font-weight: bold; pointer-events: none; }
+        .packet { transition: all 0.5s ease; }
+        .wire { stroke: #333; stroke-width: 3; stroke-dasharray: 5,5; }
+        
+        .packet-data { fill: #ffc107; } /* Application Data */
+        .packet-tcp { fill: #17a2b8; }  /* TCP Header */
+        .packet-ip { fill: #28a745; }   /* IP Header */
+        .packet-eth { fill: #6c757d; }  /* Ethernet Header */
+
+        .state-label { font-size: 12px; fill: #666; }
+        .active-layer { fill: #cfe2ff; stroke: #0d6efd; }
+    </style>
+</head>
+<body>
+
+    <h1>TCP/IP 運作原理可視化</h1>
+
+    <!-- 演示 1: 封裝與傳輸 -->
+    <div class="container">
+        <h2>1. 資料封裝與傳輸 (Encapsulation)</h2>
+        <p>觀察資料如何從發送端 (Sender) 層層打包，經過網路，到達接收端 (Receiver) 層層解包。</p>
+        <svg viewBox="0 0 800 400" id="encapSvg">
+            <!-- Wires -->
+            <line x1="200" y1="350" x2="600" y2="350" class="wire" />
+            <text x="400" y="340" text-anchor="middle" font-size="12" fill="#666">Physical Medium (實體層)</text>
+
+            <!-- Sender Stack -->
+            <g id="sender-stack">
+                <text x="100" y="30" text-anchor="middle" font-size="16" font-weight="bold">Sender (發送端)</text>
+                <rect x="50" y="50" width="100" height="40" class="layer-box" id="s-app"><title>HTTP/FTP/SMTP</title></rect>
+                <text x="100" y="75" text-anchor="middle" class="layer-text">Application</text>
+                
+                <rect x="50" y="120" width="100" height="40" class="layer-box" id="s-transport"><title>TCP/UDP</title></rect>
+                <text x="100" y="145" text-anchor="middle" class="layer-text">Transport</text>
+                
+                <rect x="50" y="190" width="100" height="40" class="layer-box" id="s-internet"><title>IP</title></rect>
+                <text x="100" y="215" text-anchor="middle" class="layer-text">Internet</text>
+                
+                <rect x="50" y="260" width="100" height="40" class="layer-box" id="s-link"><title>Ethernet/Wi-Fi</title></rect>
+                <text x="100" y="285" text-anchor="middle" class="layer-text">Link</text>
+            </g>
+
+            <!-- Receiver Stack -->
+            <g id="receiver-stack">
+                <text x="700" y="30" text-anchor="middle" font-size="16" font-weight="bold">Receiver (接收端)</text>
+                <rect x="650" y="50" width="100" height="40" class="layer-box" id="r-app"></rect>
+                <text x="700" y="75" text-anchor="middle" class="layer-text">Application</text>
+                
+                <rect x="650" y="120" width="100" height="40" class="layer-box" id="r-transport"></rect>
+                <text x="700" y="145" text-anchor="middle" class="layer-text">Transport</text>
+                
+                <rect x="650" y="190" width="100" height="40" class="layer-box" id="r-internet"></rect>
+                <text x="700" y="215" text-anchor="middle" class="layer-text">Internet</text>
+                
+                <rect x="650" y="260" width="100" height="40" class="layer-box" id="r-link"></rect>
+                <text x="700" y="285" text-anchor="middle" class="layer-text">Link</text>
+            </g>
+
+            <!-- Moving Packet Group -->
+            <g id="data-packet" style="display:none">
+                <!-- Layers of the packet, initially hidden -->
+                <rect x="0" y="0" width="30" height="20" class="packet-eth" id="p-eth" style="opacity:0" />
+                <rect x="5" y="0" width="25" height="20" class="packet-ip" id="p-ip" style="opacity:0" />
+                <rect x="10" y="0" width="20" height="20" class="packet-tcp" id="p-tcp" style="opacity:0" />
+                <rect x="15" y="0" width="15" height="20" class="packet-data" id="p-data" />
+                <text x="7" y="-5" font-size="10" fill="#333" id="p-label">Data</text>
+            </g>
+            
+            <!-- Legend -->
+            <g transform="translate(250, 20)">
+                <rect x="0" y="0" width="10" height="10" class="packet-data"/> <text x="15" y="10" font-size="10">Data</text>
+                <rect x="60" y="0" width="10" height="10" class="packet-tcp"/> <text x="75" y="10" font-size="10">TCP Header</text>
+                <rect x="140" y="0" width="10" height="10" class="packet-ip"/> <text x="155" y="10" font-size="10">IP Header</text>
+                <rect x="210" y="0" width="10" height="10" class="packet-eth"/> <text x="225" y="10" font-size="10">Frame Header</text>
+            </g>
+        </svg>
+        <div class="controls">
+            <button onclick="startEncapsulation()">發送資料 (Send Data)</button>
+            <button onclick="resetEncap()" style="background-color: #6c757d;">重置</button>
+        </div>
+        <div class="status-log" id="encap-log">等待操作...</div>
+    </div>
+
+    <!-- 演示 2: 三向交握 -->
+    <div class="container">
+        <h2>2. TCP 三向交握 (3-Way Handshake)</h2>
+        <p>建立可靠連線的過程：SYN → SYN+ACK → ACK。</p>
+        <svg viewBox="0 0 800 300" id="handshakeSvg">
+            <!-- Timelines -->
+            <line x1="200" y1="50" x2="200" y2="250" stroke="#999" stroke-width="2" />
+            <line x1="600" y1="50" x2="600" y2="250" stroke="#999" stroke-width="2" />
+
+            <!-- Nodes -->
+            <circle cx="200" cy="40" r="30" fill="#007bff" />
+            <text x="200" y="45" text-anchor="middle" fill="white" font-weight="bold">Client</text>
+            
+            <circle cx="600" cy="40" r="30" fill="#28a745" />
+            <text x="600" y="45" text-anchor="middle" fill="white" font-weight="bold">Server</text>
+
+            <!-- State Labels -->
+            <text x="140" y="45" text-anchor="end" class="state-label" id="client-state">CLOSED</text>
+            <text x="660" y="45" text-anchor="start" class="state-label" id="server-state">LISTEN</text>
+
+            <!-- Moving Packet for Handshake -->
+            <g id="hs-packet" style="display:none">
+                <rect x="-20" y="-10" width="40" height="20" rx="5" fill="#ffc107" stroke="#333" />
+                <text x="0" y="5" text-anchor="middle" font-size="12" font-weight="bold" id="hs-text">SYN</text>
+            </g>
+            
+            <!-- Arrows (will be drawn dynamically) -->
+            <g id="arrow-layer"></g>
+        </svg>
+        <div class="controls">
+            <button onclick="startHandshake()">建立連線 (Connect)</button>
+            <button onclick="resetHandshake()" style="background-color: #6c757d;">重置</button>
+        </div>
+        <div class="status-log" id="hs-log">Server 處於 LISTEN 狀態...</div>
+    </div>
+
+    <script>
+        // --- Utils ---
+        function log(id, msg) {
+            const el = document.getElementById(id);
+            el.innerHTML += `> ${msg}<br>`;
+            el.scrollTop = el.scrollHeight;
+        }
+        function clearLog(id) { document.getElementById(id).innerHTML = ''; }
+        function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+        function setHighlight(id, active) {
+            const el = document.getElementById(id);
+            if(active) el.classList.add('active-layer');
+            else el.classList.remove('active-layer');
+        }
+
+        // --- Encapsulation Logic ---
+        let encapInProgress = false;
+        const packet = document.getElementById('data-packet');
+        const pEth = document.getElementById('p-eth');
+        const pIp = document.getElementById('p-ip');
+        const pTcp = document.getElementById('p-tcp');
+        
+        async function startEncapsulation() {
+            if (encapInProgress) return;
+            encapInProgress = true;
+            clearLog('encap-log');
+            resetEncapVisuals();
+
+            // Step 1: App Layer
+            log('encap-log', 'Sender: 應用層產生 Data');
+            setHighlight('s-app', true);
+            packet.style.display = 'block';
+            packet.setAttribute('transform', 'translate(85, 60)'); 
+            await sleep(1000);
+            setHighlight('s-app', false);
+
+            // Step 2: Transport Layer (Add TCP)
+            log('encap-log', 'Sender: 傳輸層加上 TCP Header (Segment)');
+            setHighlight('s-transport', true);
+            packet.setAttribute('transform', 'translate(85, 130)');
+            pTcp.style.opacity = 1;
+            await sleep(1000);
+            setHighlight('s-transport', false);
+
+            // Step 3: Internet Layer (Add IP)
+            log('encap-log', 'Sender: 網路層加上 IP Header (Packet)');
+            setHighlight('s-internet', true);
+            packet.setAttribute('transform', 'translate(85, 200)');
+            pIp.style.opacity = 1;
+            await sleep(1000);
+            setHighlight('s-internet', false);
+
+            // Step 4: Link Layer (Add Frame)
+            log('encap-log', 'Sender: 連結層加上 Frame Header & Footer');
+            setHighlight('s-link', true);
+            packet.setAttribute('transform', 'translate(85, 270)');
+            pEth.style.opacity = 1;
+            await sleep(1000);
+            setHighlight('s-link', false);
+
+            // Step 5: Transmission
+            log('encap-log', 'Network: 透過實體線路傳輸 010101...');
+            // Animate across
+            const startX = 85;
+            const endX = 685;
+            const steps = 50;
+            for(let i=0; i<=steps; i++) {
+                const x = startX + (endX - startX) * (i/steps);
+                const y = 270 + Math.sin(i) * 5; // slight wave
+                packet.setAttribute('transform', `translate(${x}, ${y})`);
+                await sleep(20);
+            }
+            packet.setAttribute('transform', `translate(${endX}, 270)`);
+            
+            // Step 6: Receiver Link (Remove Frame)
+            log('encap-log', 'Receiver: 連結層收到，移除 Frame Header');
+            setHighlight('r-link', true);
+            await sleep(1000);
+            pEth.style.opacity = 0;
+            setHighlight('r-link', false);
+
+            // Step 7: Receiver Internet (Remove IP)
+            log('encap-log', 'Receiver: 網路層移除 IP Header');
+            setHighlight('r-internet', true);
+            packet.setAttribute('transform', `translate(${endX}, 200)`);
+            await sleep(1000);
+            pIp.style.opacity = 0;
+            setHighlight('r-internet', false);
+
+            // Step 8: Receiver Transport (Remove TCP)
+            log('encap-log', 'Receiver: 傳輸層移除 TCP Header');
+            setHighlight('r-transport', true);
+            packet.setAttribute('transform', `translate(${endX}, 130)`);
+            await sleep(1000);
+            pTcp.style.opacity = 0;
+            setHighlight('r-transport', false);
+
+            // Step 9: Receiver App
+            log('encap-log', 'Receiver: 應用層接收原始 Data');
+            setHighlight('r-app', true);
+            packet.setAttribute('transform', `translate(${endX}, 60)`);
+            await sleep(1000);
+            setHighlight('r-app', false);
+            
+            log('encap-log', '完成！資料成功傳送。');
+            encapInProgress = false;
+        }
+
+        function resetEncap() {
+            encapInProgress = false;
+            resetEncapVisuals();
+            clearLog('encap-log');
+            log('encap-log', '已重置');
+        }
+
+        function resetEncapVisuals() {
+            packet.style.display = 'none';
+            pEth.style.opacity = 0;
+            pIp.style.opacity = 0;
+            pTcp.style.opacity = 0;
+            document.querySelectorAll('.layer-box').forEach(b => b.classList.remove('active-layer'));
+        }
+
+        // --- Handshake Logic ---
+        let hsInProgress = false;
+        const hsPacket = document.getElementById('hs-packet');
+        const hsText = document.getElementById('hs-text');
+        const cState = document.getElementById('client-state');
+        const sState = document.getElementById('server-state');
+        const arrowLayer = document.getElementById('arrow-layer');
+
+        function drawArrow(x1, y1, x2, y2, color) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+            line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', 2);
+            line.setAttribute('marker-end', 'url(#arrowhead)'); // Simplified, assume no marker def for now or add if needed
+            arrowLayer.appendChild(line);
+        }
+
+        async function animatePacket(x1, y1, x2, y2, text) {
+            hsPacket.style.display = 'block';
+            hsText.textContent = text;
+            const steps = 40;
+            for(let i=0; i<=steps; i++) {
+                const cx = x1 + (x2 - x1) * (i/steps);
+                const cy = y1 + (y2 - y1) * (i/steps);
+                hsPacket.setAttribute('transform', `translate(${cx}, ${cy})`);
+                await sleep(20);
+            }
+        }
+
+        async function startHandshake() {
+            if(hsInProgress) return;
+            hsInProgress = true;
+            resetHandshakeVisuals();
+            clearLog('hs-log');
+
+            // SYN
+            log('hs-log', 'Client 發送 [SYN] (seq=x)');
+            cState.textContent = 'SYN_SENT';
+            cState.style.fill = '#d63384';
+            await animatePacket(200, 60, 600, 120, 'SYN');
+            drawLine(200, 60, 600, 120);
+            
+            // Server Receive SYN
+            log('hs-log', 'Server 收到 SYN，狀態變為 SYN_RCVD');
+            sState.textContent = 'SYN_RCVD';
+            sState.style.fill = '#d63384';
+            await sleep(500);
+
+            // SYN-ACK
+            log('hs-log', 'Server 回覆 [SYN, ACK] (seq=y, ack=x+1)');
+            await animatePacket(600, 120, 200, 180, 'SYN+ACK');
+            drawLine(600, 120, 200, 180);
+
+            // Client Receive SYN-ACK
+            log('hs-log', 'Client 收到 SYN+ACK，連線建立！');
+            cState.textContent = 'ESTABLISHED';
+            cState.style.fill = '#198754';
+            await sleep(500);
+
+            // ACK
+            log('hs-log', 'Client 回覆 [ACK] (seq=x+1, ack=y+1)');
+            await animatePacket(200, 180, 600, 240, 'ACK');
+            drawLine(200, 180, 600, 240);
+
+            // Server Receive ACK
+            log('hs-log', 'Server 收到 ACK，連線建立！');
+            sState.textContent = 'ESTABLISHED';
+            sState.style.fill = '#198754';
+            
+            hsPacket.style.display = 'none';
+            hsInProgress = false;
+        }
+
+        function drawLine(x1, y1, x2, y2) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M${x1} ${y1} L${x2} ${y2}`);
+            path.setAttribute('stroke', '#666');
+            path.setAttribute('stroke-width', '1');
+            path.setAttribute('stroke-dasharray', '4');
+            arrowLayer.appendChild(path);
+        }
+
+        function resetHandshake() {
+            hsInProgress = false;
+            resetHandshakeVisuals();
+            log('hs-log', '已重置');
+        }
+
+        function resetHandshakeVisuals() {
+            hsPacket.style.display = 'none';
+            arrowLayer.innerHTML = '';
+            cState.textContent = 'CLOSED';
+            cState.style.fill = '#666';
+            sState.textContent = 'LISTEN';
+            sState.style.fill = '#666';
+        }
+    </script>
+</body>
+</html>
