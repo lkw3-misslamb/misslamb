@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>水的三態示範</title>
+  <style>
+    svg { width: 300px; height: 200px; border: 1px solid #ccc; }
+    circle { cursor: pointer; transition: fill 0.5s; }
+    text { font-size: 16px; fill: #333; }
+  </style>
+</head>
+<body>
+  <h2>水的三態變化教學示範</h2>
+  <svg viewBox="0 0 300 200">
+    <!-- 固態：冰塊 -->
+    <circle id="solid" cx="50" cy="100" r="30" fill="lightblue" />
+    <text x="30" y="150">固態：冰塊</text>
+
+    <!-- 液態：水滴 -->
+    <circle id="liquid" cx="150" cy="100" r="30" fill="blue" />
+    <text x="130" y="150">液態：水滴</text>
+
+    <!-- 氣態：水蒸氣 -->
+    <circle id="gas" cx="250" cy="100" r="30" fill="lightgray" />
+    <text x="230" y="150">氣態：水蒸氣</text>
+  </svg>
+
+  <p id="description">點選任一狀態，了解它的特性！</p>
+
+  <script>
+    const description = document.getElementById('description');
+    const states = {
+      solid: '冰塊是水的固態，形狀固定且溫度低於0°C。',
+      liquid: '水滴是水的液態，沒有固定形狀但有固定體積。',
+      gas: '水蒸氣是水的氣態，擴散並充滿空氣。'
+    };
+
+    document.getElementById('solid').addEventListener('click', () => {
+      description.textContent = states.solid;
+      highlight('solid');
+    });
+
+    document.getElementById('liquid').addEventListener('click', () => {
+      description.textContent = states.liquid;
+      highlight('liquid');
+    });
+
+    document.getElementById('gas').addEventListener('click', () => {
+      description.textContent = states.gas;
+      highlight('gas');
+    });
+
+    function highlight(selected) {
+      ['solid', 'liquid', 'gas'].forEach(id => {
+        const circle = document.getElementById(id);
+        circle.setAttribute('fill-opacity', id === selected ? '1' : '0.4');
+      });
+    }
+  </script>
+</body>
+</html>
