@@ -1,447 +1,47 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>人體能量系統轉換互動示範</title>
+    <title>Miss Lam's Testing and Sharing Space</title>
     <style>
-        :root {
-            --color-atp: #ff4d4d;      /* 紅色 - 爆發力 */
-            --color-lactic: #ffca28;   /* 黃色 - 乳酸/糖酵解 */
-            --color-aerobic: #42a5f5;  /* 藍色 - 有氧/耐力 */
-            --bg-color: #f5f7fa;
-            --card-bg: #ffffff;
-            --text-color: #333;
-        }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
         }
-
-        h1 { margin-bottom: 10px; }
-        p.subtitle { color: #666; margin-bottom: 30px; max-width: 600px; text-align: center; }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            justify-content: center;
-            width: 100%;
-            max-width: 1000px;
+        h1 {
+            color: #333;
         }
-
-        /* 卡片樣式 */
-        .card {
-            background: var(--card-bg);
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            padding: 20px;
-            flex: 1;
-            min-width: 300px;
+        ul {
+            list-style-type: none;
+            padding: 0;
         }
-
-        /* 圖表區域 */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
-
-        svg {
-            width: 100%;
-            height: 100%;
-            overflow: visible;
-        }
-
-        /* 控制區域 */
-        .controls {
-            width: 100%;
-            max-width: 800px;
-            margin-top: 20px;
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        input[type=range] {
-            width: 100%;
+        li {
             margin: 15px 0;
-            cursor: pointer;
         }
-
-        /* 儀表板顯示 */
-        .stats-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
+        a {
+            text-decoration: none;
+            color: #0066cc;
+            font-size: 20px;
+            border: 1px solid #ccc;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: inline-block;
         }
-
-        .stat-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-weight: bold;
-        }
-
-        .bar-container {
-            flex-grow: 1;
-            height: 12px;
-            background: #eee;
-            border-radius: 6px;
-            margin: 0 15px;
-            overflow: hidden;
-        }
-
-        .bar-fill {
-            height: 100%;
-            transition: width 0.1s linear;
-        }
-
-        .legend {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-bottom: 15px;
-            font-size: 0.9em;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dot { width: 12px; height: 12px; border-radius: 50%; }
-        
-        .indicator-line {
-            stroke: #333;
-            stroke-width: 2;
-            stroke-dasharray: 5,5;
-        }
-
-        .time-display {
-            text-align: center;
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: #2c3e50;
-        }
-
-        .dominant-system {
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            color: white;
-            font-weight: bold;
-            margin-top: 10px;
-            transition: background-color 0.3s;
-        }
-
-        /* 路徑動畫 */
-        path {
-            fill: none;
-            stroke-width: 4;
-            stroke-linecap: round;
-            transition: d 0.3s;
+        a:hover {
+            background-color: #f0f0f0;
         }
     </style>
 </head>
 <body>
 
-    <h1>人體能量系統轉換示範</h1>
-    <p class="subtitle">拖動滑桿觀察隨著運動時間增加，身體如何從無氧系統過渡到有氧系統。</p>
+    <h1>Miss Lam's Testing and Sharing Space</h1>
 
-    <div class="container">
-        <!-- 左側：SVG 圖表 -->
-        <div class="card" style="flex: 2;">
-            <div class="legend">
-                <div class="legend-item"><div class="dot" style="background: var(--color-atp);"></div>ATP-PC (磷酸原)</div>
-                <div class="legend-item"><div class="dot" style="background: var(--color-lactic);"></div>Lactic Acid (乳酸)</div>
-                <div class="legend-item"><div class="dot" style="background: var(--color-aerobic);"></div>Aerobic (有氧)</div>
-            </div>
-            <div class="chart-container" id="chartArea">
-                <svg viewBox="0 0 600 300" preserveAspectRatio="none">
-                    <!-- 網格線 -->
-                    <g id="grid" stroke="#e0e0e0" stroke-width="1">
-                        <line x1="0" y1="0" x2="600" y2="0" />
-                        <line x1="0" y1="75" x2="600" y2="75" />
-                        <line x1="0" y1="150" x2="600" y2="150" />
-                        <line x1="0" y1="225" x2="600" y2="225" />
-                        <line x1="0" y1="300" x2="600" y2="300" />
-                    </g>
-                    
-                    <!-- 曲線 -->
-                    <path id="path-atp" stroke="var(--color-atp)" />
-                    <path id="path-lactic" stroke="var(--color-lactic)" />
-                    <path id="path-aerobic" stroke="var(--color-aerobic)" />
+    <ul>
+        <li><a href="ICT1.html">Go to ICT1 Page</a></li>
+        <li><a href="PE1.html">Go to PE1 Page</a></li>
+    </ul>
 
-                    <!-- 互動指示線 -->
-                    <line id="time-line" class="indicator-line" x1="0" y1="0" x2="0" y2="300" />
-                    <circle id="dot-atp" r="6" fill="var(--color-atp)" cx="0" cy="0" />
-                    <circle id="dot-lactic" r="6" fill="var(--color-lactic)" cx="0" cy="0" />
-                    <circle id="dot-aerobic" r="6" fill="var(--color-aerobic)" cx="0" cy="0" />
-                </svg>
-                <!-- X軸標籤 -->
-                <div style="position: absolute; bottom: -25px; width: 100%; display: flex; justify-content: space-between; font-size: 0.8em; color: #888;">
-                    <span>0s</span>
-                    <span>30s</span>
-                    <span>60s</span>
-                    <span>90s</span>
-                    <span>2m</span>
-                    <span>3m+</span>
-                </div>
-                <!-- Y軸標籤 -->
-                <div style="position: absolute; left: -35px; top: 0; height: 100%; display: flex; flex-direction: column; justify-content: space-between; font-size: 0.8em; color: #888;">
-                    <span>100%</span>
-                    <span>50%</span>
-                    <span>0%</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 右側：數據面板 -->
-        <div class="card">
-            <div class="time-display">時間: <span id="time-val">0</span> 秒</div>
-            
-            <div class="stats-panel">
-                <div class="stat-row" style="color: var(--color-atp)">
-                    <span style="width: 70px;">ATP-PC</span>
-                    <div class="bar-container">
-                        <div class="bar-fill" id="bar-atp" style="background: var(--color-atp); width: 0%;"></div>
-                    </div>
-                    <span id="pct-atp" style="width: 40px; text-align: right;">0%</span>
-                </div>
-
-                <div class="stat-row" style="color: #f9a825">
-                    <span style="width: 70px;">Lactic</span>
-                    <div class="bar-container">
-                        <div class="bar-fill" id="bar-lactic" style="background: var(--color-lactic); width: 0%;"></div>
-                    </div>
-                    <span id="pct-lactic" style="width: 40px; text-align: right;">0%</span>
-                </div>
-
-                <div class="stat-row" style="color: var(--color-aerobic)">
-                    <span style="width: 70px;">Aerobic</span>
-                    <div class="bar-container">
-                        <div class="bar-fill" id="bar-aerobic" style="background: var(--color-aerobic); width: 0%;"></div>
-                    </div>
-                    <span id="pct-aerobic" style="width: 40px; text-align: right;">0%</span>
-                </div>
-            </div>
-
-            <div id="dominant-msg" class="dominant-system">
-                當前主導：ATP-PC
-            </div>
-            
-            <div style="margin-top: 20px; font-size: 0.9em; color: #555; line-height: 1.4;">
-                <strong id="system-title">系統說明：</strong>
-                <p id="system-desc">...</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="controls">
-        <label for="timeSlider"><strong>拖動滑桿模擬運動持續時間 (0 - 200秒)</strong></label>
-        <input type="range" id="timeSlider" min="0" max="200" value="0" step="1">
-        <div style="display: flex; justify-content: center; gap: 10px;">
-            <button onclick="toggleAnimation()" style="padding: 8px 20px; cursor: pointer; background: #333; color: white; border: none; border-radius: 4px;">
-                ▶ 播放演示
-            </button>
-        </div>
-    </div>
-
-    <script>
-        // 1. 數學模型配置
-        // 使用簡化的數學函數模擬一般運動生理學曲線
-        // 時間單位：秒
-        const MAX_TIME = 200;
-        const WIDTH = 600;
-        const HEIGHT = 300;
-
-        function getEnergyData(t) {
-            // 為了模擬真實曲線，這裡使用混合函數
-            // 注意：這些是為了視覺化而調整的近似值，非絕對精確的生理數據
-
-            // 1. ATP-PC: 起步極高，10秒後急劇下降
-            // 使用指數衰減
-            let rawAtp = 120 * Math.exp(-t / 12); 
-            if(t > 20) rawAtp = rawAtp * 0.5; // 加速衰減
-
-            // 2. Lactic Acid (Glycolytic): 快速上升，在 30-45秒達到高峰，然後下降
-            // 使用類似 Gamma 分佈的曲線 t * exp(-kt)
-            let rawLactic = (t * 4) * Math.exp(-t / 25);
-            
-            // 3. Aerobic: 緩慢上升，最終接管
-            // 使用 S 形曲線 (Sigmoid 或 飽和指數)
-            let rawAerobic = 100 * (1 - Math.exp(-(t - 5) / 45));
-            if(rawAerobic < 0) rawAerobic = 0;
-
-            // 歸一化 (Normalization) 使總和為 100%
-            let total = rawAtp + rawLactic + rawAerobic;
-            if (total === 0) total = 1; // 避免除以零
-
-            return {
-                atp: (rawAtp / total) * 100,
-                lactic: (rawLactic / total) * 100,
-                aerobic: (rawAerobic / total) * 100
-            };
-        }
-
-        // 2. 初始化與繪製靜態曲線
-        const pathAtp = document.getElementById('path-atp');
-        const pathLactic = document.getElementById('path-lactic');
-        const pathAerobic = document.getElementById('path-aerobic');
-
-        let dAtp = `M 0 ${HEIGHT} `;
-        let dLactic = `M 0 ${HEIGHT} `;
-        let dAerobic = `M 0 ${HEIGHT} `;
-
-        // 預先計算所有點以繪製 SVG Path
-        for (let t = 0; t <= MAX_TIME; t+=2) {
-            const data = getEnergyData(t);
-            const x = (t / MAX_TIME) * WIDTH;
-            
-            // Y座標 (SVG座標系原點在左上，所以用 HEIGHT - value)
-            // value 是百分比 (0-100)，映射到 (0-HEIGHT)
-            const yAtp = HEIGHT - (data.atp / 100 * HEIGHT);
-            const yLactic = HEIGHT - (data.lactic / 100 * HEIGHT);
-            const yAerobic = HEIGHT - (data.aerobic / 100 * HEIGHT);
-
-            dAtp += `L ${x} ${yAtp} `;
-            dLactic += `L ${x} ${yLactic} `;
-            dAerobic += `L ${x} ${yAerobic} `;
-        }
-
-        pathAtp.setAttribute('d', dAtp);
-        pathLactic.setAttribute('d', dLactic);
-        pathAerobic.setAttribute('d', dAerobic);
-
-        // 3. 互動邏輯
-        const slider = document.getElementById('timeSlider');
-        const timeVal = document.getElementById('time-val');
-        const timeLine = document.getElementById('time-line');
-        
-        // 點
-        const dotAtp = document.getElementById('dot-atp');
-        const dotLactic = document.getElementById('dot-lactic');
-        const dotAerobic = document.getElementById('dot-aerobic');
-
-        // 文字與條形圖
-        const pctAtp = document.getElementById('pct-atp');
-        const barAtp = document.getElementById('bar-atp');
-        const pctLactic = document.getElementById('pct-lactic');
-        const barLactic = document.getElementById('bar-lactic');
-        const pctAerobic = document.getElementById('pct-aerobic');
-        const barAerobic = document.getElementById('bar-aerobic');
-        
-        const domMsg = document.getElementById('dominant-msg');
-        const sysTitle = document.getElementById('system-title');
-        const sysDesc = document.getElementById('system-desc');
-
-        function updateView(t) {
-            timeVal.innerText = t;
-            const data = getEnergyData(t);
-
-            // 更新指示線位置
-            const xPos = (t / MAX_TIME) * WIDTH;
-            timeLine.setAttribute('x1', xPos);
-            timeLine.setAttribute('x2', xPos);
-
-            // 更新點位置
-            dotAtp.setAttribute('cx', xPos);
-            dotAtp.setAttribute('cy', HEIGHT - (data.atp / 100 * HEIGHT));
-            
-            dotLactic.setAttribute('cx', xPos);
-            dotLactic.setAttribute('cy', HEIGHT - (data.lactic / 100 * HEIGHT));
-            
-            dotAerobic.setAttribute('cx', xPos);
-            dotAerobic.setAttribute('cy', HEIGHT - (data.aerobic / 100 * HEIGHT));
-
-            // 更新百分比文字與長條圖
-            pctAtp.innerText = Math.round(data.atp) + '%';
-            barAtp.style.width = data.atp + '%';
-            
-            pctLactic.innerText = Math.round(data.lactic) + '%';
-            barLactic.style.width = data.lactic + '%';
-            
-            pctAerobic.innerText = Math.round(data.aerobic) + '%';
-            barAerobic.style.width = data.aerobic + '%';
-
-            // 判斷主導系統與說明文字
-            let dom = 'atp';
-            let maxVal = data.atp;
-            
-            if (data.lactic > maxVal) { maxVal = data.lactic; dom = 'lactic'; }
-            if (data.aerobic > maxVal) { maxVal = data.aerobic; dom = 'aerobic'; }
-
-            updateInfo(dom, t);
-        }
-
-        function updateInfo(system, t) {
-            if (system === 'atp') {
-                domMsg.style.backgroundColor = 'var(--color-atp)';
-                domMsg.innerText = '當前主導：ATP-PC 系統';
-                sysTitle.innerText = 'ATP-PC (磷酸原系統)';
-                sysDesc.innerText = '無需氧氣，利用肌肉中儲存的 ATP 和磷酸肌酸 (PC) 提供能量。特點是產能極快但持續時間極短 (約 0-10秒)。適用於百米衝刺、舉重等爆發性運動。';
-            } else if (system === 'lactic') {
-                domMsg.style.backgroundColor = '#f9a825'; // 調整文字可讀性
-                domMsg.innerText = '當前主導：乳酸系統';
-                sysTitle.innerText = 'Glycolytic (乳酸/糖酵解系統)';
-                sysDesc.innerText = '無氧狀態下分解葡萄糖產生 ATP。產能速度快，但會產生乳酸堆積導致肌肉疲勞。是 30秒 至 2分鐘 高強度運動（如 400米跑）的主要能量來源。';
-            } else {
-                domMsg.style.backgroundColor = 'var(--color-aerobic)';
-                domMsg.innerText = '當前主導：有氧系統';
-                sysTitle.innerText = 'Aerobic (有氧/氧化系統)';
-                sysDesc.innerText = '在氧氣充足時分解醣類和脂肪。產能效率最高且持久，但啟動較慢。隨著運動時間拉長（超過 2-3分鐘），逐漸成為主導系統，適用於長跑、游泳等耐力運動。';
-            }
-        }
-
-        // 綁定事件
-        slider.addEventListener('input', (e) => {
-            isAnimating = false; // 用戶手動拖動時停止動畫
-            updateView(parseInt(e.target.value));
-        });
-
-        // 動畫控制
-        let isAnimating = false;
-        let animationId;
-
-        function toggleAnimation() {
-            if (isAnimating) {
-                isAnimating = false;
-                cancelAnimationFrame(animationId);
-            } else {
-                isAnimating = true;
-                if (parseInt(slider.value) >= MAX_TIME) slider.value = 0;
-                animate();
-            }
-        }
-
-        function animate() {
-            if (!isAnimating) return;
-            
-            let currentVal = parseFloat(slider.value);
-            if (currentVal < MAX_TIME) {
-                currentVal += 0.5; // 動畫速度
-                slider.value = currentVal;
-                updateView(currentVal);
-                animationId = requestAnimationFrame(animate);
-            } else {
-                isAnimating = false;
-            }
-        }
-
-        // 初始化視圖
-        updateView(0);
-
-    </script>
 </body>
 </html>
