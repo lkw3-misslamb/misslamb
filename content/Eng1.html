@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1024, initial-scale=1.0, viewport-fit=cover">
+<title>Spelling Practice — 英文串字練習</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;700;900&family=Outfit:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg-card: #ffffff;
+    --bg-card-alt: #e8f4f8;
+    --text-primary: #1a2a3a;
+    --text-secondary: #5a7a8a;
+    --accent: #00b894;
+    --accent-glow: rgba(0, 184, 148, 0.25);
+    --highlight: #fdcb6e;
+    --error: #e17055;
+    --error-bg: rgba(225, 112, 85, 0.12);
+    --success: #00b894;
+    --success-bg: rgba(0, 184, 148, 0.12);
+    --border: #d0e4ec;
+    --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --gradient-bg: linear-gradient(135deg, #e8f4f8 0%, #f0f7fa 40%, #fef9ef 100%);
+    --gradient-accent: linear-gradient(135deg, #00b894 0%, #00cec9 100%);
+    --gradient-gold: linear-gradient(135deg, #fdcb6e 0%, #f0b429 100%);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { min-height: 100%; touch-action: manipulation; }
+  body {
+    font-family: 'Noto Sans TC', 'Outfit', sans-serif;
+    background: var(--gradient-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .app-container {
+    width: 1024px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 24px 32px 40px;
+    min-height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .logo-section { text-align: center; margin-bottom: 12px; animation: fadeSlideDown 0.6s ease-out; }
+  .logo-icon { font-size: 44px; margin-bottom: 4px; display: inline-block; animation: bounce 2s ease-in-out infinite; }
+  .logo-title {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 42px;
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+    line-height: 1.1;
+  }
+  .logo-subtitle { font-size: 15px; color: var(--text-secondary); font-weight: 700; letter-spacing: 2px; margin-top: 4px; }
+
+  .screen { display: none; width: 100%; flex-direction: column; align-items: center; animation: fadeSlideUp 0.4s ease-out; }
+  .screen.active { display: flex; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    width: 100%;
+    max-width: 900px;
+    box-shadow: var(--shadow-md);
+    margin-bottom: 16px;
+  }
+
+  .rules-box {
+    background: var(--bg-card-alt);
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    font-size: 18px;
+    line-height: 1.9;
+    color: var(--text-secondary);
+  }
+  .rules-box strong { color: var(--text-primary); }
+  .teacher-box {
+    background: #fff8e1;
+    border: 1px solid #f0d078;
+    border-radius: var(--radius-sm);
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #5c4700;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 17px 36px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 800;
+    font-size: 21px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-user-select: none;
+    user-select: none;
+    min-height: 62px;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--gradient-accent); color: #fff; box-shadow: 0 4px 16px var(--accent-glow); }
+  .btn-gold { background: var(--gradient-gold); color: #1a2a3a; box-shadow: 0 4px 16px rgba(253, 203, 110, 0.3); }
+  .btn-outline { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+  .btn-full { width: 100%; }
+
+  .status-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 16px; width: 100%; max-width: 900px; }
+  .timer-bar, .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 50px;
+    padding: 10px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 25px;
+    font-weight: 700;
+    color: var(--accent);
+    box-shadow: var(--shadow-md);
+    min-width: 180px;
+  }
+  .score-bar { color: var(--text-primary); font-family: 'Noto Sans TC', sans-serif; font-size: 19px; }
+
+  .progress-row { display: flex; gap: 8px; margin-bottom: 20px; width: 100%; max-width: 900px; flex-wrap: wrap; }
+  .progress-dot { flex: 1 0 24px; min-width: 24px; height: 9px; border-radius: 6px; background: var(--border); transition: background 0.3s ease; }
+  .progress-dot.done { background: var(--gradient-accent); }
+  .progress-dot.current { background: var(--highlight); box-shadow: 0 0 10px rgba(253, 203, 110, 0.5); }
+
+  .word-counter { font-size: 16px; color: var(--text-secondary); font-weight: 700; margin-bottom: 8px; text-align: center; }
+  .target-word-area { text-align: center; margin-bottom: 20px; }
+  .target-label { font-size: 14px; color: var(--text-secondary); font-weight: 700; margin-bottom: 8px; letter-spacing: 1px; text-transform: uppercase; }
+  .target-chinese { font-size: 20px; color: var(--text-secondary); font-weight: 700; margin-bottom: 8px; min-height: 28px; }
+  .target-word {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 52px;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: 1px;
+    line-height: 1.25;
+    word-break: break-word;
+  }
+
+  .char-display { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-bottom: 22px; min-height: 52px; }
+  .char-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 46px;
+    padding: 0 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 23px;
+    font-weight: 800;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    background: var(--bg-card-alt);
+    color: var(--text-secondary);
+    transition: all 0.15s ease;
+  }
+  .char-box.space-char { min-width: 24px; border: 2px dashed var(--border); background: transparent; }
+  .char-box.correct { background: var(--success-bg); border-color: var(--success); color: var(--success); }
+  .char-box.wrong { background: var(--error-bg); border-color: var(--error); color: var(--error); animation: shake 0.3s ease; }
+  .char-box.cursor { border-color: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+
+  .input-area { position: relative; width: 100%; max-width: 620px; margin: 0 auto; }
+  .game-input {
+    width: 100%;
+    padding: 18px 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 25px;
+    font-weight: 700;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-card-alt);
+    color: var(--text-primary);
+    outline: none;
+    transition: border-color 0.2s ease;
+    text-align: center;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .game-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .game-input.has-error { border-color: var(--error); box-shadow: 0 0 0 3px var(--error-bg); }
+  .input-hint { font-size: 15px; color: var(--text-secondary); text-align: center; margin-top: 10px; font-weight: 700; }
+
+  .keyboard-tip { margin: 18px auto 0; max-width: 620px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+  .tip-pill { background: var(--bg-card-alt); border: 1px solid var(--border); color: var(--text-secondary); padding: 9px 13px; border-radius: 999px; font-size: 14px; font-weight: 700; }
+
+  .completed-words { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+  .completed-word-item { display: flex; align-items: center; gap: 10px; padding: 11px 15px; background: var(--success-bg); border-radius: var(--radius-sm); font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--success); }
+
+  .result-time { text-align: center; margin-bottom: 20px; }
+  .result-time-label { font-size: 15px; color: var(--text-secondary); font-weight: 700; margin-bottom: 4px; }
+  .result-time-value { font-family: 'JetBrains Mono', monospace; font-size: 58px; font-weight: 900; background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .result-time-unit { font-size: 17px; color: var(--text-secondary); font-weight: 700; }
+  .result-words { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .result-word-chip { display: flex; align-items: center; gap: 8px; background: var(--success-bg); padding: 10px 16px; border-radius: var(--radius-sm); font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; color: var(--success); }
+
+  .celebration-icon { font-size: 58px; text-align: center; margin-bottom: 8px; animation: bounce 1s ease-in-out infinite; }
+  .celebration-text { font-size: 28px; font-weight: 900; text-align: center; color: var(--text-primary); margin-bottom: 20px; }
+  .button-row { display: flex; gap: 12px; width: 100%; }
+  .button-row .btn { flex: 1; }
+
+  .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-100px); background: var(--bg-card); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 13px 25px; font-weight: 800; font-size: 16px; color: var(--accent); box-shadow: var(--shadow-lg); z-index: 1000; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 700px) {
+    .app-container { padding: 18px 16px 30px; }
+    .logo-title { font-size: 34px; }
+    .card { padding: 22px 18px; }
+    .target-word { font-size: 38px; }
+    .status-row { flex-direction: column; gap: 10px; }
+    .timer-bar, .score-bar { width: 100%; }
+    .button-row { flex-direction: column; }
+  }
+
+  @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeSlideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <div class="logo-section">
+    <div class="logo-icon">🔤</div>
+    <div class="logo-title">Spelling Practice</div>
+    <div class="logo-subtitle">英文串字練習</div>
+  </div>
+
+  <div id="startScreen" class="screen active">
+    <div class="card">
+      <div class="rules-box">
+        <strong>🎯 練習玩法</strong><br>
+        系統會將老師設定的 <strong>所有英文生字</strong> 隨機排列。<br>
+        請按畫面顯示的生字，<strong>逐字正確輸入</strong>。<br>
+        完成全部生字後，可以按 <strong>重新練習</strong> 再挑戰一次。
+      </div>
+      <div class="teacher-box">
+        <strong>👩‍🏫 老師設定：</strong><br>
+        如要更改練習生字，請在 HTML 內搜尋 <strong>WORDS</strong>，直接修改字庫即可。
+      </div>
+      <button class="btn btn-primary btn-full" id="btnStart"><i class="fa-solid fa-play"></i> 開始練習</button>
+    </div>
+  </div>
+
+  <div id="gameScreen" class="screen">
+    <div class="status-row">
+      <div class="timer-bar"><i class="fa-solid fa-stopwatch"></i><span id="timerDisplay">00.0</span><span style="font-size:14px;margin-left:2px">秒</span></div>
+      <div class="score-bar"><i class="fa-solid fa-list-check"></i><span id="practiceStatus">0 / 0</span></div>
+    </div>
+    <div class="progress-row" id="progressRow"></div>
+    <div class="card">
+      <div class="word-counter" id="wordCounter">第 1 個生字</div>
+      <div class="target-word-area">
+        <div class="target-label">請輸入以下英文生字</div>
+        <div class="target-chinese" id="targetChinese"></div>
+        <div class="target-word" id="targetWord"></div>
+      </div>
+      <div class="char-display" id="charDisplay"></div>
+      <div class="input-area">
+        <input type="text" class="game-input" id="gameInput" inputmode="latin" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="點擊這裡，使用英文鍵盤輸入">
+        <div class="input-hint" id="inputHint">📱 iPad 使用提示：請切換至英文鍵盤，逐字輸入</div>
+      </div>
+      <div class="keyboard-tip">
+        <div class="tip-pill">Aa 大小寫要正確</div>
+        <div class="tip-pill">Space 空格也要輸入</div>
+        <div class="tip-pill">錯字可刪除重打</div>
+      </div>
+      <div class="completed-words" id="completedWords"></div>
+    </div>
+  </div>
+
+  <div id="resultScreen" class="screen">
+    <div class="card">
+      <div class="celebration-icon">🎉</div>
+      <div class="celebration-text">全部完成！</div>
+      <div class="result-time">
+        <div class="result-time-label">完成時間</div>
+        <div class="result-time-value" id="resultTime">0.0</div>
+        <div class="result-time-unit">秒</div>
+      </div>
+      <div class="result-words" id="resultWords"></div>
+      <div class="button-row">
+        <button class="btn btn-gold" id="btnPracticeAgain"><i class="fa-solid fa-rotate-right"></i> 重新練習</button>
+        <button class="btn btn-outline" id="btnBackHome"><i class="fa-solid fa-house"></i> 返回首頁</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  "use strict";
+
+  /*
+    ===== 老師字庫設定 =====
+    只需要修改下面 WORDS 內的英文生字。
+    格式：{ en: "英文生字", zh: "中文提示" }
+    如果不需要中文提示，可寫 zh: ""
+  */
+  var WORDS = [
+    { en: "apple", zh: "蘋果" },
+    { en: "banana", zh: "香蕉" },
+    { en: "computer", zh: "電腦" },
+    { en: "keyboard", zh: "鍵盤" },
+    { en: "science", zh: "科學" },
+    { en: "teacher", zh: "老師" },
+    { en: "student", zh: "學生" },
+    { en: "library", zh: "圖書館" }
+  ];
+
+  var gameWords = [];
+  var currentWordIndex = 0;
+  var timerInterval = null;
+  var startTime = 0;
+  var elapsedMs = 0;
+
+  var startScreen = document.getElementById("startScreen");
+  var gameScreen = document.getElementById("gameScreen");
+  var resultScreen = document.getElementById("resultScreen");
+  var btnStart = document.getElementById("btnStart");
+  var btnPracticeAgain = document.getElementById("btnPracticeAgain");
+  var btnBackHome = document.getElementById("btnBackHome");
+  var timerDisplay = document.getElementById("timerDisplay");
+  var practiceStatus = document.getElementById("practiceStatus");
+  var progressRow = document.getElementById("progressRow");
+  var wordCounter = document.getElementById("wordCounter");
+  var targetWordEl = document.getElementById("targetWord");
+  var targetChineseEl = document.getElementById("targetChinese");
+  var charDisplay = document.getElementById("charDisplay");
+  var gameInput = document.getElementById("gameInput");
+  var inputHint = document.getElementById("inputHint");
+  var completedWords = document.getElementById("completedWords");
+  var resultTime = document.getElementById("resultTime");
+  var resultWords = document.getElementById("resultWords");
+  var toastEl = document.getElementById("toast");
+
+  function showScreen(screen) {
+    startScreen.classList.remove("active");
+    gameScreen.classList.remove("active");
+    resultScreen.classList.remove("active");
+    screen.classList.add("active");
+  }
+
+  function showToast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add("show");
+    setTimeout(function() { toastEl.classList.remove("show"); }, 1800);
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement("div");
+    div.appendChild(document.createTextNode(String(str)));
+    return div.innerHTML;
+  }
+
+  function formatTime(ms) { return (ms / 1000).toFixed(1); }
+
+  function shuffleArray(arr) {
+    var copy = arr.slice();
+    for (var i = copy.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var temp = copy[i]; copy[i] = copy[j]; copy[j] = temp;
+    }
+    return copy;
+  }
+
+  function startTimer() {
+    startTime = Date.now();
+    timerInterval = setInterval(function() {
+      elapsedMs = Date.now() - startTime;
+      timerDisplay.textContent = formatTime(elapsedMs);
+    }, 50);
+  }
+
+  function stopTimer() {
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    elapsedMs = Date.now() - startTime;
+    timerDisplay.textContent = formatTime(elapsedMs);
+  }
+
+  function renderProgressDots() {
+    var html = "";
+    for (var i = 0; i < gameWords.length; i++) {
+      var cls = "progress-dot";
+      if (i < currentWordIndex) cls += " done";
+      else if (i === currentWordIndex) cls += " current";
+      html += '<div class="' + cls + '"></div>';
+    }
+    progressRow.innerHTML = html;
+  }
+
+  function renderCharDisplay(target, typed) {
+    var html = "";
+    for (var i = 0; i < target.length; i++) {
+      var ch = target[i];
+      var isSpace = ch === " ";
+      var cls = isSpace ? "char-box space-char" : "char-box";
+      if (i < typed.length) cls += typed[i] === ch ? " correct" : " wrong";
+      else if (i === typed.length) cls += " cursor";
+      var display = isSpace ? "&nbsp;" : escapeHtml(ch);
+      html += '<span class="' + cls + '">' + display + '</span>';
+    }
+    charDisplay.innerHTML = html;
+  }
+
+  function renderCompletedWords() {
+    var html = "";
+    for (var i = 0; i < currentWordIndex; i++) {
+      var w = gameWords[i];
+      html += '<div class="completed-word-item"><i class="fa-solid fa-circle-check"></i> ' + escapeHtml(w.en) +
+        (w.zh ? ' <span style="opacity:0.7;font-family:Noto Sans TC,sans-serif;font-size:13px;margin-left:6px">' + escapeHtml(w.zh) + '</span>' : '') + '</div>';
+    }
+    completedWords.innerHTML = html;
+  }
+
+  function focusInputSoon() {
+    setTimeout(function() {
+      gameInput.focus();
+      gameInput.click();
+    }, 120);
+  }
+
+  function loadCurrentWord() {
+    var w = gameWords[currentWordIndex];
+    targetWordEl.textContent = w.en;
+    if (w.zh) { targetChineseEl.textContent = w.zh; targetChineseEl.style.display = ""; }
+    else { targetChineseEl.textContent = ""; targetChineseEl.style.display = "none"; }
+
+    wordCounter.textContent = "第 " + (currentWordIndex + 1) + " / " + gameWords.length + " 個生字";
+    practiceStatus.textContent = currentWordIndex + " / " + gameWords.length;
+    gameInput.value = "";
+    gameInput.classList.remove("has-error");
+    inputHint.textContent = "📱 iPad 使用提示：請切換至英文鍵盤，逐字輸入";
+    renderCharDisplay(w.en, "");
+    renderProgressDots();
+    renderCompletedWords();
+    focusInputSoon();
+  }
+
+  function onWordComplete() {
+    currentWordIndex++;
+    if (currentWordIndex >= gameWords.length) {
+      stopTimer();
+      showResultScreen();
+    } else {
+      showToast("✅ 正確！下一個生字");
+      loadCurrentWord();
+    }
+  }
+
+  function handleInput() {
+    if (!gameWords[currentWordIndex]) return;
+    var target = gameWords[currentWordIndex].en;
+    var typed = gameInput.value;
+    renderCharDisplay(target, typed);
+
+    var hasError = false;
+    for (var i = 0; i < typed.length; i++) {
+      if (i >= target.length || typed[i] !== target[i]) { hasError = true; break; }
+    }
+
+    if (hasError) {
+      gameInput.classList.add("has-error");
+      inputHint.textContent = "❌ 有錯誤，請刪除後修正";
+    } else {
+      gameInput.classList.remove("has-error");
+      inputHint.textContent = "📱 iPad 使用提示：請切換至英文鍵盤，逐字輸入";
+    }
+
+    if (typed === target) onWordComplete();
+  }
+
+  function startGame() {
+    if (WORDS.length === 0) { showToast("⚠️ 請先加入練習生字"); return; }
+    gameWords = shuffleArray(WORDS);
+    currentWordIndex = 0;
+    elapsedMs = 0;
+    timerDisplay.textContent = "00.0";
+    showScreen(gameScreen);
+    loadCurrentWord();
+    startTimer();
+  }
+
+  function showResultScreen() {
+    showScreen(resultScreen);
+    resultTime.textContent = formatTime(elapsedMs);
+    var html = "";
+    for (var i = 0; i < gameWords.length; i++) {
+      var w = gameWords[i];
+      html += '<div class="result-word-chip"><i class="fa-solid fa-circle-check"></i> ' + escapeHtml(w.en) +
+        (w.zh ? ' <span style="opacity:0.65;font-family:Noto Sans TC,sans-serif;font-size:13px;margin-left:4px">' + escapeHtml(w.zh) + '</span>' : '') + '</div>';
+    }
+    resultWords.innerHTML = html;
+  }
+
+  btnStart.addEventListener("click", startGame);
+  btnPracticeAgain.addEventListener("click", startGame);
+  btnBackHome.addEventListener("click", function() { showScreen(startScreen); });
+  gameInput.addEventListener("input", handleInput);
+  gameInput.addEventListener("keydown", function(e) { if (e.key === "Enter") e.preventDefault(); });
+
+  // iPad: tap anywhere on game screen to bring keyboard back.
+  gameScreen.addEventListener("click", function() {
+    if (document.activeElement !== gameInput) focusInputSoon();
+  });
+})();
+</script>
+</body>
+</html>
